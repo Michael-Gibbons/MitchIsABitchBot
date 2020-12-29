@@ -1,5 +1,6 @@
 require('dotenv').config();
 const Twit = require('twit');
+const CronJob = require('cron').CronJob;
 
 var T = new Twit({
   consumer_key: process.env.API_KEY,
@@ -11,7 +12,7 @@ var T = new Twit({
 })
 
 let lastTweetID = '';
-let bitchArray = [];
+const bitchArray = [];
 const getTweets = async (req, res) =>{
   await T.get('/statuses/user_timeline', {user_id:1249982359, count:1})
   .then((response) => {
@@ -20,11 +21,19 @@ const getTweets = async (req, res) =>{
     if(lastTweetID !== tweetId){
       T.post('statuses/update', { in_reply_to_status_id: tweetId, status: `@${userName} ur a lil bitch` }, (err, data, response) => {
         console.log('done')
+        console.log('tweeted, setting new tweet id');
         lastTweetID = tweetId;
       })
+    }else{
+      console.log('has not tweeted, checking again in 60 seconds.')
     }
   })
   .catch((error)=>console.log(error));
 }
-
-getTweets();// put in cron job or something idk
+const MitchMcBitch = new CronJob(
+	'0 * * * * *',
+  getTweets,
+	null,
+	true,
+	'America/Los_Angeles'
+);
